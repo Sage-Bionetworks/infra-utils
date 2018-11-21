@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 # double interpolate vars when using multiple branches
 if [ "$TRAVIS_BRANCH" != "master" ]; then

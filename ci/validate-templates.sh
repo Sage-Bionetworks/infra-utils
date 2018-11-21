@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 # Validate aws templates (assumes sceptre dir convention)
 TEMPLATES=templates/*

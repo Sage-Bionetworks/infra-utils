@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 # install app
 pip install --exists-action a "sceptre>=1.3"

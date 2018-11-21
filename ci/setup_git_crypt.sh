@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 pushd /tmp
 wget https://github.com/AGWA/git-crypt/archive/master.zip -O git-crypt.zip

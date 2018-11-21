@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 # upload lambda packages to S3 bucket to share
 REPO_NAME=${PWD##*/}
