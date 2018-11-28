@@ -4,7 +4,7 @@ set -ex
 # some projects deploy to multiple AWS accounts, dev/stage/prod/etc..
 # we manage this by using git branches, travis vars and double interpolation
 # of environment variables.
-if [ -z ${TRAVIS_TAG+x} ] && [ ${TRAVIS_BRANCH} != "master" ]; then
+if [[ (-z ${TRAVIS_TAG+x} || ${TRAVIS_TAG} != "") && ${TRAVIS_BRANCH} != "master" ]]; then
   eval export "AwsCfServiceRoleArn=\$AwsCfServiceRoleArn_$TRAVIS_BRANCH"
   eval export "AwsTravisAccessKey=\$AwsTravisAccessKey_$TRAVIS_BRANCH"
   eval export "AwsTravisSecretAccessKey=\$AwsTravisSecretAccessKey_$TRAVIS_BRANCH"
