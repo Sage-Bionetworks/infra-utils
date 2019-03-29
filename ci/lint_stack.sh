@@ -1,22 +1,23 @@
 # Cloudformation does not allow provisioning stacks with duplicate names.
 # This script helps ensure that stack names for newly provisioned
 # resources are unique.
+# NOTE: paths are setup to work on Ubuntu 14.04 (trusty) distro
 #!/bin/bash
 set -e
 set -o pipefail
 
 # Get all existing stack names
 get_stack_names() {
-  ( git checkout HEAD~1 ) 2> /dev/null
-  grep_outputs=( $(grep -r -w -h 'stack_name:' ${PATH}) )
+  ( /usr/bin/git checkout HEAD~1 ) 2> /dev/null
+  grep_outputs=( $(/bin/grep -r -w -h 'stack_name:' ${PATH}) )
   stack_names=("${grep_outputs[@]/'stack_name: '}")
   #echo "${stack_names[@]}"
 }
 
 # Get the newly added stack_name
 get_new_stack_name() {
-  ( git checkout - ) 2> /dev/null
-  diff_output=$(git diff HEAD~1|grep '+stack_name:' || true)
+  ( /usr/bin/git checkout - ) 2> /dev/null
+  diff_output=$(/usr/bin/git diff HEAD~1|/bin/grep '+stack_name:' || true)
   new_stack_name=${diff_output:13}
   #echo "${new_stack_name}"
 }
