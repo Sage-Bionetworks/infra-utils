@@ -7,16 +7,16 @@ set -o pipefail
 
 # Get all existing stack names
 get_stack_names() {
-  ( /usr/bin/git checkout HEAD~1 ) 2> /dev/null
-  grep_outputs=( $(/usr/bin/grep -r -w -h 'stack_name:' ${PATH}) )
+  ( git checkout HEAD~1 ) 2> /dev/null
+  grep_outputs=( $(grep -r -w -h 'stack_name:' ${PATH}) )
   stack_names=("${grep_outputs[@]/'stack_name: '}")
   #echo "${stack_names[@]}"
 }
 
 # Get the newly added stack_name
 get_new_stack_name() {
-  ( /usr/bin/git checkout - ) 2> /dev/null
-  diff_output=$(/usr/bin/git diff HEAD~1|/usr/bin/grep '+stack_name:' || true)
+  ( git checkout - ) 2> /dev/null
+  diff_output=$(git diff HEAD~1|grep '+stack_name:' || true)
   new_stack_name=${diff_output:13}
   #echo "${new_stack_name}"
 }
