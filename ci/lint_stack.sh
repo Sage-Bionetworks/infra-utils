@@ -1,10 +1,15 @@
 # Cloudformation does not allow provisioning stacks with duplicate names.
 # This script helps ensure that stack names for newly provisioned
 # resources are unique.
-# NOTE: paths are setup to work on Ubuntu 14.04 (trusty) distro
 #!/bin/bash
 set -e
 set -o pipefail
+
+# Name can only contain alpha, number or hyphens, 1st char must be alpha.
+# TODO - need to add the following constraints:
+#   cannot contain square bracket characters
+#   string length must be less than 128 characters
+STACK_NAME_CONSTRAINT="^[a-zA-Z][a-zA-Z0-9.-][^_~\`/{},.\"()\"+=\\<>?:;|!@#$%^&*[:space:]]*$"
 
 # Get all existing stack names
 get_stack_names() {
@@ -33,6 +38,16 @@ verify_unique() {
   done
 }
 
+# Verify that new stack_name contains valid chars and is a certain length
+verify_name_constraint() {
+  if [[ ! $new_stack_name =~ $STACK_NAME_CONSTRAINT ]]; then
+    echo "ERROR: Stack name \"${new_stack_name}\" contains invalid characters"
+    echo "A stack name can contain only alphanumeric characters (case sensitive) and hyphens."
+    echo "It must start with an alphabetic character and cannot be longer than 128 characters."
+    exit 1
+  fi
+}
+
 usage() {                                      # Function: Print a help message.
   echo "Usage: $0 [ -p PATH ]" 1>&2
 }
@@ -53,6 +68,7 @@ while getopts ":p:" options; do
       get_stack_names
       get_new_stack_name
       verify_unique
+      verify_name_constraint
       ;;
     :)                            # If expected argument omitted:
       echo "Error: -${OPTARG} requires an argument."
