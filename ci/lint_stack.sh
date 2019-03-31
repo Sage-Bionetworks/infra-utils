@@ -11,28 +11,38 @@ set -o pipefail
 #   string length must be less than 128 characters
 STACK_NAME_CONSTRAINT="^[a-zA-Z][a-zA-Z0-9.-][^_~\`/{},.\"()\"+=\\<>?:;|!@#$%^&*[:space:]]*$"
 
+# util to print a generic list
+print_list() {
+  list=("$@")
+  for item in "${list[@]}"
+  do
+    echo "${item}"
+  done
+}
+
 # Get all existing stack names
-get_stack_names() {
-  ( /usr/bin/git checkout HEAD~1 ) 2> /dev/null
-  grep_outputs=( $(/bin/grep -r -w -h 'stack_name:' ${PATH}) )
-  stack_names=("${grep_outputs[@]/'stack_name: '}")
+get_existing_stacks() {
+  stack_names=( $(/usr/local/bin/aws cloudformation list-stacks \
+      --query 'StackSummaries[?starts_with(StackStatus, `DELETE_COMPLETE`) != `true`].StackName' \
+      --output text) )
   #echo "${stack_names[@]}"
 }
 
 # Get the newly added stack_name
 get_new_stack_name() {
-  ( /usr/bin/git checkout - ) 2> /dev/null
   diff_output=$(/usr/bin/git diff HEAD~1|/bin/grep '+stack_name:' || true)
   new_stack_name=${diff_output:13}
   #echo "${new_stack_name}"
 }
 
-# Verify new stack_name is a unique
+# Verify new stack_name is unique
 verify_unique() {
   for stack_name in "${stack_names[@]}"
   do
     if [ "${new_stack_name}" = "${stack_name}" ]; then
       echo "ERROR: new stack_name \"${new_stack_name}\" is not unique"
+      echo "Existing stacks names:"
+      print_list "${stack_names[@]}"
       exit 1
      fi
   done
@@ -48,34 +58,10 @@ verify_name_constraint() {
   fi
 }
 
-usage() {                                      # Function: Print a help message.
-  echo "Usage: $0 [ -p PATH ]" 1>&2
-}
-
-exit_abnormal() {                              # Function: Exit with error.
-  usage
-  exit 1
-}
-
-if [ $# -eq 0 ]; then
-    exit_abnormal
+# main
+get_new_stack_name
+if [ ! -z "${new_stack_name}" ]; then
+  verify_name_constraint
+  get_existing_stacks
+  verify_unique
 fi
-
-while getopts ":p:" options; do
-  case "${options}" in
-    p)
-      PATH=${OPTARG}
-      get_stack_names
-      get_new_stack_name
-      verify_unique
-      verify_name_constraint
-      ;;
-    :)                            # If expected argument omitted:
-      echo "Error: -${OPTARG} requires an argument."
-      exit_abnormal
-      ;;
-    *)                            # If unknown (any other) option:
-      exit_abnormal
-      ;;
-  esac
-done
