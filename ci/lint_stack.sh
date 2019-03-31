@@ -22,7 +22,7 @@ print_list() {
 
 # Get all existing stack names
 get_existing_stacks() {
-  stack_names=( $(/usr/local/bin/aws cloudformation list-stacks \
+  stack_names=( $(aws cloudformation list-stacks \
       --query 'StackSummaries[?starts_with(StackStatus, `DELETE_COMPLETE`) != `true`].StackName' \
       --output text) )
   #echo "${stack_names[@]}"
