@@ -14,14 +14,12 @@
     FixWindowsAgent.ps1
 #>
 
+# Get jumpcloud connect key from flag or env var
 Param(
     [String]$JcConnectKey = $env:JC_CONNECT_KEY
 )
-if(-not($JcConnectKey)) { Throw “-JcConnectKey is required” }
+if(-not($JcConnectKey)) { Throw "-JcConnectKey is required" }
 
-#
-# Update with your own JumpCloud connect key
-#
 $CONNECT_KEY="${JcConnectKey}"
 
 $AGENT_PATH="${env:ProgramFiles}\JumpCloud"
@@ -51,10 +49,12 @@ Function InstallAgentDependency() {
     Import-Module -Name VcRedist -Force
 
     # Get and install VC++ 2013 Redistributable package (x86 and x64)
-    New-Item C:\temp\VcRedist -ItemType Directory -Force
+    New-Item $env:TEMP\VcRedist -ItemType Directory -Force
     $VcList = Get-VcList -Release 2013
-    $VcList | Save-VcRedist -ForceWebRequest -Path C:\Temp\VcRedist
-    Install-VcRedist -Silent -Path C:\Temp\VcRedist -VcList $VcList
+    $VcList | Save-VcRedist -ForceWebRequest -Path $env:TEMP\VcRedist
+    Install-VcRedist -Silent -Path $env:TEMP\VcRedist -VcList $VcList
+    Write-Host "Installed VC++ Distributions: "
+    Get-InstalledVcRedist | Select Name, Version, ProductCode
 }
 
 Function DownloadAgentInstaller() {
