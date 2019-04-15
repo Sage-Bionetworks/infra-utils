@@ -1,3 +1,4 @@
+# source: https://github.com/TheJumpCloud/support/blob/master/scripts/windows/FixWindowsAgent.ps1
 <#
 .SYNOPSIS
     Repairs an installation of the JumpCloud Windows agent
@@ -42,20 +43,6 @@ $INSTALLER_BINARY_NAMES="JumpCloudInstaller.exe,JumpCloudInstaller.tmp"
 # Agent Installer Funcs
 #
 #########################################################################################
-Function InstallAgentDependency() {
-    # Install VcRedist https://docs.stealthpuppy.com/docs/vcredist
-    Install-PackageProvider -Name NuGet -Force
-    Install-Module -Name VcRedist -Force
-    Import-Module -Name VcRedist -Force
-
-    # Get and install VC++ 2013 Redistributable package (x86 and x64)
-    New-Item $env:TEMP\VcRedist -ItemType Directory -Force
-    $VcList = Get-VcList -Release 2013
-    $VcList | Save-VcRedist -ForceWebRequest -Path $env:TEMP\VcRedist
-    Install-VcRedist -Silent -Path $env:TEMP\VcRedist -VcList $VcList
-    Write-Host "Installed VC++ Distributions: "
-    Get-InstalledVcRedist | Select Name, Version, ProductCode
-}
 
 Function DownloadAgentInstaller() {
     (New-Object System.Net.WebClient).DownloadFile("${AGENT_INSTALLER_URL}", "${AGENT_INSTALLER_PATH}")
@@ -271,8 +258,6 @@ Function DownloadAndInstallAgent() {
         Write-Host "Agent is already installed, not installing again."
     }
 }
-
-InstallAgentDependency
 
 CheckForAndUninstallExistingAgent
 
