@@ -10,10 +10,21 @@ Param(
 if(-not($JcSystemsGroupId)) { Throw "-JcSystemsGroupId is required" }
 if(-not($JcServiceApiKey)) { Throw "-JcServiceApiKey is required" }
 
+# JC powershell module, https://github.com/TheJumpCloud/support/wiki
+Function InstallPowershellModule() {
+  Install-Module -Name JumpCloud -Force
+  Import-Module -Name JumpCloud -Force
+}
+
+Function AssociateJcSystem() {
+  Connect-JCOnline $JcServiceApiKey -force
+  # assumes jq is installed thru choco, https://chocolatey.org/packages/jq
+  $JcSystemId = Get-Content $env:ProgramFiles\JumpCloud\Plugins\Contrib\jcagent.conf | jq -r '.systemKey'
+  Add-JCSystemGroupMember -SystemID $JcSystemId -ByID -GroupID $JcSystemsGroupId
+}
+
 $env:Path += ";C:\ProgramData\chocolatey\lib\jq\tools"
 
-Install-Module -Name JumpCloud -Force
-Import-Module -Name JumpCloud -Force
-Connect-JCOnline $JcServiceApiKey -force
-$JcSystemId = Get-Content $env:ProgramFiles\JumpCloud\Plugins\Contrib\jcagent.conf | jq -r '.systemKey'
-Add-JCSystemGroupMember -SystemID $JcSystemId -ByID -GroupID $JcSystemsGroupId
+InstallPowershellModule
+
+AssociateJcSystem
