@@ -5,7 +5,6 @@
 #########################################################################################
 Function InstallVcRedist() {
     # Install VcRedist https://docs.stealthpuppy.com/docs/vcredist
-    Install-PackageProvider -Name NuGet -Force
     Install-Module -Name VcRedist -Force
     Import-Module -Name VcRedist -Force
 
