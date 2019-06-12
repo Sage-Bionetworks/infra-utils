@@ -1,6 +1,6 @@
-# Cloudformation does not allow provisioning stacks with duplicate names.
-# This script helps ensure that stack names for newly provisioned
-# resources are unique.
+# Provisioning a stack with the same name will update the resources in the stack.
+# This script helps ensure that stack names for newly provisioned stacks are
+# unique so as to prevent new stacks from changing resources of exisitng stacks.
 #!/bin/bash
 set -e
 set -o pipefail
@@ -36,6 +36,12 @@ get_cf_stack_names() {
 get_new_stack_name() {
   local diff_output=$(/usr/bin/git diff HEAD~1 | /bin/grep '^+stack_name:' || true)
   new_stack_name=${diff_output:13}
+}
+
+# Get the OwnerEmail in newly added stack name
+get_owner_email() {
+  local diff_output=$(/usr/bin/git diff HEAD~1 | /bin/grep '^\+[[:space:]][[:space:]]OwnerEmail:' || true)
+  owner_email=$(/usr/bin/cut -d':' -f2 <<<$diff_output | /usr/bin/cut -d'"' -f2)
 }
 
 # Verify new stack_name is unique
@@ -82,6 +88,25 @@ verify_sceptre_files() {
   done
 }
 
+# Verify owner's email exists in jumpcloud to assign systems to users
+verify_owner_email() {
+  local jc_api_key=$(/usr/local/bin/aws ssm get-parameters \
+                     --names /infra/JcServiceApiKey \
+                     --with-decryption \
+                     --query "Parameters[*].{Value:Value}" \
+                     --out text)
+  local user_id=$(/usr/bin/curl --silent --show-error -X GET https://console.jumpcloud.com/api/systemusers \
+                  -H 'Accept: application/json' \
+                  -H 'Content-Type: application/json' \
+                  -H 'x-api-key: '"${jc_api_key}" | /usr/bin/jq -r '.results | .[] | select(.email=='\"${owner_email}\"') | .id')
+  if [[ -z "${user_id}" ]]; then
+    printf "\e[1;31mERROR: \"${owner_email}\" is an invalid OwnerEmail.  "
+    printf "The owner email must match an existing email in jumpcloud\e[0m\n"
+    exit 1
+  fi
+}
+
+
 # main
 cmd(){ echo `basename $0`; }
 usage() {                                      # Function: Print a help message.
@@ -108,6 +133,10 @@ while getopts ":rl:" options; do
          verify_name_constraint
          get_cf_stack_names
          verify_unique
+       fi
+       get_owner_email
+       if [ ! -z "${owner_email}" ]; then
+         verify_owner_email
        fi
       ;;
     l) PATH=${OPTARG}
