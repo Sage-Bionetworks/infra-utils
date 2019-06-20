@@ -1,6 +1,6 @@
-# Cloudformation does not allow provisioning stacks with duplicate names.
-# This script helps ensure that stack names for newly provisioned
-# resources are unique.
+# Provisioning a stack with the same name will update the resources in the stack.
+# This script helps ensure that stack names for newly provisioned stacks are
+# unique so as to prevent new stacks from changing resources of exisitng stacks.
 #!/bin/bash
 set -e
 set -o pipefail
@@ -22,7 +22,8 @@ print_list() {
 
 # Get existing stack names from local files
 get_local_stack_names() {
-  stack_names=( $(/bin/grep -r -w -h '^stack_name:' ${PATH} | /usr/bin/cut -d':' -f2 | /usr/bin/awk '{$1=$1};1') )
+  # get stack names and strip spaces and tabs from string
+  stack_names=( $(/bin/grep -r -w -h '^stack_name:' ${PATH} | /usr/bin/cut -d':' -f2 | /usr/bin/tr -d '\040\011\042\047') )
 }
 
 # Get existing stack names from cloudformation
@@ -34,8 +35,16 @@ get_cf_stack_names() {
 
 # Get the newly added stack_name
 get_new_stack_name() {
-  local diff_output=$(/usr/bin/git diff HEAD~1 | /bin/grep '^+stack_name:' || true)
-  new_stack_name=${diff_output:13}
+  # get stack name and strip spaces/tabs/new line/carriage return from string
+  local diff_output=$(/usr/bin/git diff --unified=0 HEAD~1 | /bin/grep '^+stack_name:' || true)
+  new_stack_name=$(/usr/bin/cut -d':' -f2 <<< ${diff_output} | /usr/bin/tr -d '\040\011\012\015\042\047')
+}
+
+# Get the OwnerEmail in newly added stack name
+get_owner_email() {
+  # get stack name and strip spaces/tabs/new line/carriage return from string
+  local diff_output=$(/usr/bin/git diff --unified=0 HEAD~1 | /bin/grep '^\+.*OwnerEmail:' || true)
+  owner_email=$(/usr/bin/cut -d':' -f2 <<< ${diff_output} | /usr/bin/tr -d '\040\011\012\015\042\047')
 }
 
 # Verify new stack_name is unique
@@ -63,7 +72,7 @@ verify_name_constraint() {
 
 # Get the list of new or changed files
 get_diff_files() {
-  local diff_output=$(/usr/bin/git diff --name-only HEAD~1 || true)
+  local diff_output=$(/usr/bin/git diff --name-only HEAD~1 )
   files=($diff_output)
 }
 
@@ -81,6 +90,25 @@ verify_sceptre_files() {
     fi
   done
 }
+
+# Verify owner's email exists in jumpcloud to assign systems to users
+verify_owner_email() {
+  local jc_api_key=$(aws ssm get-parameters \
+                     --names /infra/JcServiceApiKey \
+                     --with-decryption \
+                     --query "Parameters[*].{Value:Value}" \
+                     --out text)
+  local user_id=$(/usr/bin/curl --silent --show-error -X GET https://console.jumpcloud.com/api/systemusers \
+                  -H 'Accept: application/json' \
+                  -H 'Content-Type: application/json' \
+                  -H 'x-api-key: '"${jc_api_key}" | jq -r '.results | .[] | select(.email=='\"${owner_email}\"') | .id')
+  if [[ -z "${user_id}" ]]; then
+    printf "\e[1;31mERROR: \"${owner_email}\" is an invalid OwnerEmail.  "
+    printf "The owner email must match an existing email in jumpcloud\e[0m\n"
+    exit 1
+  fi
+}
+
 
 # main
 cmd(){ echo `basename $0`; }
@@ -108,6 +136,10 @@ while getopts ":rl:" options; do
          verify_name_constraint
          get_cf_stack_names
          verify_unique
+       fi
+       get_owner_email
+       if [ ! -z "${owner_email}" ]; then
+         verify_owner_email
        fi
       ;;
     l) PATH=${OPTARG}
