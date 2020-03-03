@@ -39,6 +39,6 @@ Function TagRootVolume() {
         Key=OwnerEmail,Value=$OwnerEmail
 }
 
-$env:Path += ";$env:ProgramFiles\Amazon\AWSCLIV2\bin;$env:ProgramFiles\Amazon\AWSCLI\bin"
+$env:Path += ";$env:ProgramFiles\Amazon\AWSCLIV2;$env:ProgramFiles\Amazon\AWSCLI\bin"
 
 TagRootVolume
