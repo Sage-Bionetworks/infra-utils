@@ -50,7 +50,7 @@ Function UserAccessSystem() {
   $JcSystemId = Get-Content $env:ProgramFiles\JumpCloud\Plugins\Contrib\jcagent.conf | jq -r '.systemKey'
   Write-Host "JcSystemId = $JcSystemId"
   $JcUsers = (Get-JCUser -returnProperties attributes)
-  $JcUserId = Get-JCUserId $JcUsers $OwnerEmail
+  $JcUserId = (Get-JCUserId -Users $JcUsers -Email $OwnerEmail)
   Write-Host "JcUserId = $JcUserId"
   if (-not ([string]::IsNullOrEmpty($JcUserId))) {
       Add-JCSystemUser -SystemID $JcSystemId -UserId $JcUserId -Administrator $True
