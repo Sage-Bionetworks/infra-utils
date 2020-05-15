@@ -33,8 +33,8 @@ Function AssociateJcSystem() {
 }
 
 # Get the User ID that match an email address from a list of JC users
-Function Get-JCUserId($Users, $Email) {
-    $UserId
+Function Get-JCUserId {
+    Param($Users, $Email)
     foreach ($User in $Users) {
         foreach ($Attribute in $User.attributes) {
             if ($Attribute.name -match "SynapseEmail" -and $Attribute.value -match $Email) {
@@ -50,7 +50,7 @@ Function UserAccessSystem() {
   $JcSystemId = Get-Content $env:ProgramFiles\JumpCloud\Plugins\Contrib\jcagent.conf | jq -r '.systemKey'
   Write-Host "JcSystemId = $JcSystemId"
   $JcUsers = (Get-JCUser -returnProperties attributes)
-  $JcUserId = Get-JCUserId($JcUsers, $OwnerEmail)
+  $JcUserId = Get-JCUserId $JcUsers $OwnerEmail
   Write-Host "JcUserId = $JcUserId"
   if (-not ([string]::IsNullOrEmpty($JcUserId))) {
       Add-JCSystemUser -SystemID $JcSystemId -UserId $JcUserId -Administrator $True
