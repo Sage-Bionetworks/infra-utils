@@ -14,32 +14,11 @@ Function TagInstance() {
   Param(
     [String]$AwsRegion = $env:AWS_REGION,
     [String]$Ec2InstanceId = $env:EC2_INSTANCE_ID,
-    [String]$StackId = $env:STACK_ID
+    [String]$ProductName = $env:PRODUCT_NAME
   )
   if(-not($AwsRegion)) { Throw "-AwsRegion is required" }
   if(-not($Ec2InstanceId)) { Throw "-Ec2InstanceId is required" }
-  if(-not($StackId)) { Throw "-StackId is required" }
-
-  # Get segment of STACK_ID after last forward-slash
-  $ResourceId = $StackId -replace '.*\/'
-
-  # Search for provisioned product
-  $Products = & aws.exe servicecatalog search-provisioned-products `
-    --region $AwsRegion `
-    --filters SearchQuery=$ResourceId
-
-  # Check return value and verify only one product was returned
-  $Num_Products = echo "$Products" | jq '.TotalResultsCount'
-  If ([string]::IsNullOrEmpty($Num_Products)) {
-    throw "Invalid response from servicecatalog"
-  }
-
-  If (-NOT ($Num_Products -eq 1)) {
-    throw "There are $Num_Products provisioned products, cannot isolate a name for tagging."
-  }
-
-  # Get the provisioned product name
-  $ProductName = echo "$Products" | jq '.ProvisionedProducts[0].Name'
+  if(-not($ProductName)) { Throw "-ProductName is required" }
 
   # Tag instance with product name
   & aws.exe ec2 create-tags `
