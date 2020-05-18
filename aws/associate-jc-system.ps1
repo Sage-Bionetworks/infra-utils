@@ -36,12 +36,12 @@ Function AssociateJcSystem() {
 # Synapse IDs are stored in a JC custom user attribute
 Function Get-JCUserId {
     # Users is a list of JC users
-    # Attribute is the custom user attribute name
-    # Match is the JC Attribute value to match
-    Param($Users, $Attribute, $Match)
+    # Key is the JC custom user attribute name
+    # Value is the JC custom attribute value to match
+    Param($Users, $Key, $Value)
     foreach ($User in $Users) {
-        foreach ($attrib in $User.attributes) {
-            if ($attrib.name -match $Attribute -and $attrib.value -match $Match) {
+        foreach ($attribute in $User.attributes) {
+            if ($attribute.name -match $Key -and $attribute.value -match $Value) {
                 $UserId = $User._id
             }
         }
@@ -54,7 +54,7 @@ Function UserAccessSystem() {
   $JcSystemId = Get-Content $env:ProgramFiles\JumpCloud\Plugins\Contrib\jcagent.conf | jq -r '.systemKey'
   Write-Host "JcSystemId = $JcSystemId"
   $JcUsers = (Get-JCUser -returnProperties email,attributes)
-  $JcUserId = (Get-JCUserId -Users $JcUsers -Attribute "SynapseUserId" -Match $SynapseUserId)
+  $JcUserId = (Get-JCUserId -Users $JcUsers -Key "SynapseUserId" -Value $SynapseUserId)
   Write-Host "JcUserId = $JcUserId"
   if (-not ([string]::IsNullOrEmpty($JcUserId))) {
       Add-JCSystemUser -SystemID $JcSystemId -UserId $JcUserId -Administrator $True
