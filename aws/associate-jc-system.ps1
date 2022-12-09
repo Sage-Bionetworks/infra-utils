@@ -18,7 +18,7 @@ if(-not($SynapseUserId)) { Throw "-SynapseUserId is required" }
 # JC powershell module, https://github.com/TheJumpCloud/support/wiki
 Function InstallPowershellModule() {
   # pin version due to https://github.com/TheJumpCloud/support/issues/443
-  Install-Module -Name JumpCloud -RequiredVersion 2.0.2 -Force
+  Install-Module -Name JumpCloud -RequiredVersion 2.1.1 -Force
   Import-Module -Name JumpCloud -Force
 }
 
