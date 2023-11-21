@@ -8,6 +8,7 @@
 * [set_env_vars_file.ps1](#set_env_vars_fileps1)
 * [tag-instance-volume.ps1](#tag-instance-volumeps1)
 * [tag_instance.ps1](#tag_instanceps1)
+* [update_other_tag.py](#update_other_tagpy)
 
 
 ## associate-jc-system.ps1
@@ -99,4 +100,32 @@ Assumes the following are installed through choco:
 
 ```
 tag_instance.ps1
+```
+
+## update_other_tag.py
+
+Update the value of CostCenterOther for a specified EC2 instance, including related resources in the same cloudformation stack and/or service catalog product.
+
+### Dependencies
+
+The following python packages are required:
+
+* boto3
+* requests
+
+### Usage
+
+#### Options
+
+* -r --resource_id: Target resource to tag, e.g. EC2 instance name
+* -t --tag_value:   New value for CostCenterOther tag
+
+#### Environment Variables
+
+* AWS_PROFILE:  Set AWS account based on ~/.aws/config
+* MIPS_API_URL: Overwrite default mips-api URL
+
+#### Example
+```
+AWS_PROFILE=org-sagebase-scipooldev update_other_tag.py -r i-061fee3df7b496cd5 -t "No Program / 000000"
 ```
