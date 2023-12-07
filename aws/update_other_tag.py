@@ -140,7 +140,7 @@ def add_other_tag(res_id, other_value):
 
     cost_center = tags["CostCenter"]
     if cost_center != "Other / 000001":
-        raise ValueError(f"Invalid CostCenter: {cost_center}")
+        raise ValueError(f"Unexpected CostCenter '{cost_center}'")
 
     # check for an existing CostCenterOther tag
     if "CostCenterOther" in tags:

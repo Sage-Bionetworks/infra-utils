@@ -104,7 +104,10 @@ tag_instance.ps1
 
 ## update_other_tag.py
 
-Update the value of CostCenterOther for a specified EC2 instance, including related resources in the same cloudformation stack and/or service catalog product.
+Set the value of CostCenterOther for a specified EC2 instance, including related resources in the same cloudformation stack
+and/or service catalog product. This is useful for fixing typos when launching a service catalog product or for migrating a
+cloudformation stack from one cost center to another. The CostCenterOther tag will only be updated if the CostCenter tag is
+"Other / 000001" and the new value for CostCenterOther is valid.
 
 ### Dependencies
 
@@ -117,13 +120,13 @@ The following python packages are required:
 
 #### Options
 
-* -r --resource_id: Target resource to tag, e.g. EC2 instance name
-* -t --tag_value:   New value for CostCenterOther tag
+* -r --resource_id: (Required) Target resource to tag, e.g. EC2 instance name
+* -t --tag_value:   (Required) New value for CostCenterOther tag
 
 #### Environment Variables
 
-* AWS_PROFILE:  Set AWS account based on ~/.aws/config
-* MIPS_API_URL: Overwrite default mips-api URL
+* AWS_PROFILE:  (Required) Set AWS account based on ~/.aws/config
+* MIPS_API_URL: (Optional) Overwrite default mips-api URL, https://mips-api.finops.sageit.org/tags?show_inactive_codes&disable_other_code
 
 #### Example
 ```
