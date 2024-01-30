@@ -9,6 +9,7 @@
 * [tag-instance-volume.ps1](#tag-instance-volumeps1)
 * [tag_instance.ps1](#tag_instanceps1)
 * [update_other_tag.py](#update_other_tagpy)
+* [update_owner_tag.py](#update_owner_tagpy)
 
 
 ## associate-jc-system.ps1
@@ -102,6 +103,7 @@ Assumes the following are installed through choco:
 tag_instance.ps1
 ```
 
+
 ## update_other_tag.py
 
 Set the value of CostCenterOther for a specified EC2 instance, including related resources in the same cloudformation stack
@@ -129,6 +131,36 @@ The following python packages are required:
 * MIPS_API_URL: (Optional) Overwrite default mips-api URL, https://mips-api.finops.sageit.org/tags?show_inactive_codes&disable_other_code
 
 #### Example
+
 ```
 AWS_PROFILE=org-sagebase-scipooldev update_other_tag.py -r i-061fee3df7b496cd5 -t "No Program / 000000"
+```
+
+
+## update_owner_tag.py
+
+Perform a search and replace on the owner tags `OwnerEmail` and `synapse:email` across all resources in the current account.
+This is useful for transferring ownership of resources. The old tag value cannot be the empty string.
+
+### Dependencies
+
+The following python packages are required:
+
+* boto3
+
+### Usage
+
+#### Options
+
+* -o --old-email:  (Required) Existing tag value to match on
+* -n --new-email:  (Required) New tag value to set
+
+#### Environment Variables
+
+* AWS_PROFILE: (Required) Set AWS account based on `~/.aws/config`
+
+#### Example
+
+```
+AWS_PROFILE=org-sagebase-scicomp update_owner_tag.py -o "foo@sagebase.org" -n "bar@sagebase.org"
 ```

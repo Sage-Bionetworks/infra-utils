@@ -44,13 +44,14 @@ def replace_owner_tag(old_value, new_value):
 
     # loop over each possible owner tag
     for owner_tag in ["OwnerEmail", "synapse:email"]:
-        logging.info(f"Processing tag {owner_tag}")
-
         # find all resources with a matching tag value
         arns = _find_tagged_arns(owner_tag, old_value)
+        logging.info(f"ARNs found for tag {owner_tag}: {arns}")
+        if not arns:
+            continue
 
         # replace tag value on found resources
-        logging.info(f"Tagging {arns}")
+        logging.info(f"Setting new tag value '{new_value}' on {arns}")
         result = tag_client.tag_resources(ResourceARNList=arns,
                                           Tags={owner_tag: new_value})
         failed = result["FailedResourcesMap"]
@@ -86,7 +87,14 @@ def cli():
     args = arg_parser.parse_args()
     logging.debug(f"Args: {args}")
 
-    replace_owner_tag(args.old_email, args.new_email)
+    if not args.old_email:
+        logging.error("Old tag value cannot be empty")
+
+    elif not args.new_email:
+        logging.error("New tag value cannot be empty")
+
+    else:
+        replace_owner_tag(args.old_email, args.new_email)
 
 
 if __name__ == '__main__':
