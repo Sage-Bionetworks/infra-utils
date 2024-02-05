@@ -17,10 +17,12 @@ if(-not($StackId)) { Throw "-StackId is required" }
 Function SetEnvVars() {
   $SYNAPSE_USERPROFILE_ENDPOINT = "https://repo-prod.prod.sagebase.org/repo/v1/userProfile"
   $SYNAPSE_DOMAIN_NAME = "synapse.org"
+  $TOKEN_URI = "http://169.254.169.254/latest/api/token"
+  $TOKEN = Invoke-RestMethod -Headers @{"X-aws-ec2-metadata-token-ttl-seconds" = "21600"} -Method PUT -Uri $TOKEN_URI
   $EC2_INSTANCE_IDENTITY_DOC_URI = "http://169.254.169.254/latest/dynamic/instance-identity/document"
-  $AWS_REGION = (Invoke-WebRequest -Uri $EC2_INSTANCE_IDENTITY_DOC_URI -UseBasicParsing).Content | jq .region -r
-  $EC2_METADATA_URI = "http://169.254.169.254/latest/meta-data"
-  $EC2_INSTANCE_ID = (Invoke-WebRequest -Uri $EC2_METADATA_URI/instance-id -UseBasicParsing).Content
+  $AWS_REGION = (Invoke-RestMethod -Headers @{"X-aws-ec2-metadata-token" = $TOKEN} -Method GET -Uri $EC2_INSTANCE_IDENTITY_DOC_URI).region
+  $EC2_INSTANCE_ID_URI = "http://169.254.169.254/latest/meta-data/instance-id"
+  $EC2_INSTANCE_ID = Invoke-RestMethod -Headers @{"X-aws-ec2-metadata-token" = $TOKEN} -Method GET -Uri $EC2_INSTANCE_ID_URI
   $ROOT_DISK_ID = & aws.exe ec2 describe-volumes `
     --region $AWS_REGION `
     --filters Name=attachment.instance-id,Values=$EC2_INSTANCE_ID `
