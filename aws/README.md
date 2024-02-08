@@ -7,7 +7,7 @@
 * [set_env_vars_file.ps1](#set_env_vars_fileps1)
 * [tag-instance-volume.ps1](#tag-instance-volumeps1)
 * [tag_instance.ps1](#tag_instanceps1)
-* [update_other_tag.py](#update_other_tagpy)
+* [update_costcenter_tag.py](#update_costcenter_tagpy)
 * [update_owner_tag.py](#update_owner_tagpy)
 
 
@@ -96,12 +96,17 @@ tag_instance.ps1
 ```
 
 
-## update_other_tag.py
+## update_costcenter_tag.py
 
-Set the value of CostCenterOther for a specified EC2 instance, including related resources in the same cloudformation stack
-and/or service catalog product. This is useful for fixing typos when launching a service catalog product or for migrating a
-cloudformation stack from one cost center to another. The CostCenterOther tag will only be updated if the CostCenter tag is
-"Other / 000001" and the new value for CostCenterOther is valid.
+Set the value of CostCenter and/or CostCenterOther for a specified resource,
+including related resources in the same cloudformation stack and/or service
+catalog product. The specified resource can be either an EC2 instance-id,
+or an arbitrary ARN. The CostCenterOther tag will only be updated if the
+CostCenter tag on the specified resource starts with "Other", otherwise it will
+be removed if present.
+
+This is useful for fixing typos when launching a service catalog product or for
+migrating a cloudformation stack from one cost center to another.
 
 ### Dependencies
 
@@ -114,8 +119,8 @@ The following python packages are required:
 
 #### Options
 
-* -r --resource_id: (Required) Target resource to tag, e.g. EC2 instance name
-* -t --tag_value:   (Required) New value for CostCenterOther tag
+* -r --resource:  (Required) Target resource to tag, either an ARN or an EC2 instance ID
+* -t --tag_value: (Required) New cost center value to set
 
 #### Environment Variables
 
