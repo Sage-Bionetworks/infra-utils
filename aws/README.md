@@ -1,7 +1,6 @@
 # Scripts for managing AWS
 
 * [associate-jc-system.ps1](#associate-jc-systemps1)
-* [install-jc-agent.ps1](#install-jc-agentps1)
 * [install-ms-vc.ps1](#install-ms-vcps1)
 * [nuke_bucket.py](#nuke_bucketpy)
 * [set_account_policy.sh](#set_account_policysh)
@@ -24,13 +23,6 @@ Assumes the following are installed through choco:
 ```
 associate-jc-system.ps1 -JcServiceApiKey XXXXXXXXXX -JcSystemsGroupId XXXXXXXXX -SynapseUserId 1234567
 ```
-
-## install-jc-agent.ps1
-
-### Source
-
-https://github.com/TheJumpCloud/support/blob/master/scripts/windows/FixWindowsAgent.ps1
-
 
 ## install-ms-vc.ps1
 
