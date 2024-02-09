@@ -102,8 +102,8 @@ Set the value of CostCenter and/or CostCenterOther for a specified resource,
 including related resources in the same cloudformation stack and/or service
 catalog product. The specified resource can be either an EC2 instance-id,
 or an arbitrary ARN. The CostCenterOther tag will only be updated if the
-CostCenter tag on the specified resource starts with "Other", otherwise it will
-be removed if present.
+CostCenter tag on the specified resource starts with "Other", otherwise the
+CostCenterOther tag will be removed if present.
 
 This is useful for fixing typos when launching a service catalog product or for
 migrating a cloudformation stack from one cost center to another.

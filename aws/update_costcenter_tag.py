@@ -49,6 +49,11 @@ def _mip_valid_tags():
 def _resource_tags(resource):
     """
     Get all tags associated with the given ARN or EC2 ID
+
+    While it's possible to look up the tags of an EC2 instance from its ARN,
+    the web portal does not provide the ARN of EC2 instances, and the boto
+    function to look up the ARN of an EC2 instance is `describe_instances`,
+    which also returns its tags.
     """
 
     results = []
