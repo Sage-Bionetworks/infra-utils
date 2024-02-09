@@ -3,17 +3,21 @@ import logging
 import os
 
 import boto3
+import boto3.session
 import requests
 
 
+# setup logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
 for lib in ["botocore", "urllib3"]:
     log = logging.getLogger(lib)
     log.setLevel(logging.WARNING)
 
-ec2_client = boto3.client('ec2')
-tag_client = boto3.client('resourcegroupstaggingapi')
+# setup boto session
+boto_sess = boto3.session.Session()
+sts_client = boto_sess.client('sts')
+tag_client = boto_sess.client('resourcegroupstaggingapi')
 
 
 def _aws_user_tags(tag_list):
@@ -49,36 +53,34 @@ def _mip_valid_tags():
 def _resource_tags(resource):
     """
     Get all tags associated with the given ARN or EC2 ID
-
-    While it's possible to look up the tags of an EC2 instance from its ARN,
-    the web portal does not provide the ARN of EC2 instances, and the boto
-    function to look up the ARN of an EC2 instance is `describe_instances`,
-    which also returns its tags.
     """
 
+    res_arn = None
     results = []
 
     if resource.startswith("arn:"):
-        data = tag_client.get_resources(ResourceARNList=[resource, ])
-        logging.debug(data)
-        for tag_map in data["ResourceTagMappingList"]:
-            results.append(tag_map)
+        res_arn = resource
+
     elif resource.startswith("i-"):
-        data = ec2_client.describe_instances(InstanceIds=[resource, ])
-        logging.debug(data)
-        for reservation in data["Reservations"]:
-            for instance in reservation["Instances"]:
-                results.append(instance)
+        region = boto_sess.region_name
+        account = sts_client.get_caller_identity()["Account"]
+        res_arn = f"arn:aws:ec2:{region}:{account}:instance/{resource}"
+
     else:
         raise ValueError(f"Unknown resource type: {resource}")
 
+    data = tag_client.get_resources(ResourceARNList=[res_arn, ])
+    logging.debug(data)
+    for tag_map in data["ResourceTagMappingList"]:
+        results.append(tag_map["Tags"])
+
     if len(results) == 0:
-        raise ValueError(f"Resource not found: {resource}")
+        raise ValueError(f"Resource not found: {res_arn}")
 
     if len(results) > 1:
         raise ValueError(f"Found multiple resources: {results}")
 
-    return results[0]["Tags"]
+    return results[0]
 
 
 def _get_related_arns(tags, tag):
