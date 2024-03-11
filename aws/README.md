@@ -141,8 +141,11 @@ AWS_PROFILE=org-sagebase-scipooldev update_other_tag.py -r i-061fee3df7b496cd5 -
 
 ## update_owner_tag.py
 
-Perform a search and replace on the owner tags `OwnerEmail` and `synapse:email` across all resources in the current account.
-This is useful for transferring ownership of resources. The old tag value cannot be the empty string.
+Search for resources in the current account where the owner tags `OwnerEmail`
+and `synapse:email` match the given value, and optionally set the matched tag to
+a new value.
+
+This is useful for transferring ownership of resources.
 
 ### Dependencies
 
@@ -154,15 +157,21 @@ The following python packages are required:
 
 #### Options
 
-* -o --old-email:  (Required) Existing tag value to match on
-* -n --new-email:  (Required) New tag value to set
+* -c --current-owner:  (Required) Existing tag value to match on
+* -n --new-owner:  (Optional) New tag value to set
 
 #### Environment Variables
 
 * AWS_PROFILE: (Required) Set AWS account based on `~/.aws/config`
 
-#### Example
+#### Examples
 
+List all resources matching the given owner:
 ```
-AWS_PROFILE=org-sagebase-scicomp update_owner_tag.py -o "foo@sagebase.org" -n "bar@sagebase.org"
+AWS_PROFILE=org-sagebase-scicomp update_owner_tag.py -c "foo@sagebase.org"
+```
+
+Update owner tag value on all matching resources:
+```
+AWS_PROFILE=org-sagebase-scicomp update_owner_tag.py -c "foo@sagebase.org" -n "bar@sagebase.org"
 ```
