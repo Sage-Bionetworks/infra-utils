@@ -3,6 +3,7 @@
 * [associate-jc-system.ps1](#associate-jc-systemps1)
 * [install-ms-vc.ps1](#install-ms-vcps1)
 * [nuke_bucket.py](#nuke_bucketpy)
+* [scan_ses_bounce_owners.py](#scan_ses_bounce_ownerspy)
 * [set_account_policy.sh](#set_account_policysh)
 * [set_env_vars_file.ps1](#set_env_vars_fileps1)
 * [tag-instance-volume.ps1](#tag-instance-volumeps1)
@@ -40,6 +41,23 @@ To be documented
 ### Usage
 
 To be documented
+
+
+## scan_ses_bounce_owners.py
+
+Get the suppression list from SES, and scan for resources tagged as
+owned by suppressed emails. This is useful for finding resources owned
+by people who have left Sage.
+
+### Dependencies
+
+The following python packages are required:
+
+* boto3
+
+### Usage
+
+AWS_PROFILE=organizations ./scan_ses_bounce_owners.py
 
 
 ## set_account_policy.sh
