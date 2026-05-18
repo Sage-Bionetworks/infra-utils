@@ -82,6 +82,7 @@ RULESET = {
                 "require_code_owner_review": False,
                 "require_last_push_approval": False,
                 "allowed_merge_methods": ["merge", "squash", "rebase"],
+                "required_review_thread_resolution": False,
             },
         },
         # Block force pushes
@@ -109,6 +110,8 @@ def list_existing_rulesets(org: str) -> list[dict]:
     """Return all rulesets currently defined for the org."""
     url = f"{BASE_URL}/orgs/{org}/rulesets"
     resp = requests.get(url, headers=HEADERS)
+    if not resp.ok:
+        print(f"Response body: {resp.json()}")
     resp.raise_for_status()
     return resp.json()
 
@@ -117,6 +120,8 @@ def create_ruleset(org: str, ruleset: dict) -> dict:
     """POST a new ruleset to the org and return the created object."""
     url = f"{BASE_URL}/orgs/{org}/rulesets"
     resp = requests.post(url, headers=HEADERS, json=ruleset)
+    if not resp.ok:
+        print(f"Response body: {resp.json()}")
     resp.raise_for_status()
     return resp.json()
 
@@ -125,6 +130,8 @@ def update_ruleset(org: str, ruleset_id: int, ruleset: dict) -> dict:
     """PUT (full replace) an existing ruleset."""
     url = f"{BASE_URL}/orgs/{org}/rulesets/{ruleset_id}"
     resp = requests.put(url, headers=HEADERS, json=ruleset)
+    if not resp.ok:
+        print(f"Response body: {resp.json()}")
     resp.raise_for_status()
     return resp.json()
 
