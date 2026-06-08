@@ -48,9 +48,9 @@ RULESET = {
     # Who is allowed to bypass these rules?
     # Remove entries or leave empty to allow no bypasses.
     "bypass_actors": [
-        # Allow org admins to bypass
+        # Allow org admins to bypass, actor_id is always 1 for OrganiziationAdmin
         {"actor_id": 1, "actor_type": "OrganizationAdmin", "bypass_mode": "always"},
-        # Allow repo admins to bypass
+        # Allow repo admins to bypass, actor_id 5 == repo admin
         {"actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always"},
     ],
 
