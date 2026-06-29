@@ -3,7 +3,8 @@
 create_org_ruleset.py
 
 Creates an organization-level ruleset in GitHub that applies branch protection
-rules across multiple repositories at once.
+rules across multiple repositories at once. This requires a Team or Enterprise
+organization, free-tier organizations are not supported.
 
 Usage:
     python create_org_ruleset.py
@@ -22,15 +23,8 @@ import requests
 
 # ── Configuration ────────────────────────────────────────────────────────────
 
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "YOUR_TOKEN_HERE")
-ORG = os.environ.get("GITHUB_ORG", "your-org-name")
-
-# Which repositories to target.
-# Options:
-#   {"type": "all"}                          — every repo in the org
-#   {"type": "named", "names": ["repo-a"]}  — specific repos by name
-#   {"type": "pattern", "patterns": ["*"]}  — glob patterns
-REPO_TARGET = {"type": "all"}
+GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+ORG = os.environ.get("GITHUB_ORG", "Sage-Bionetworks")
 
 # Branch patterns this ruleset will protect
 INCLUDE_BRANCH_PATTERNS = [
@@ -54,8 +48,10 @@ RULESET = {
     # Who is allowed to bypass these rules?
     # Remove entries or leave empty to allow no bypasses.
     "bypass_actors": [
-        # Allow org admins to bypass
-        {"actor_id": 1, "actor_type": "OrganizationAdmin", "bypass_mode": "always"}
+        # Allow org admins to bypass, actor_id is always 1 for OrganiziationAdmin
+        {"actor_id": 1, "actor_type": "OrganizationAdmin", "bypass_mode": "always"},
+        # Allow repo admins to bypass, actor_id 5 == repo admin
+        {"actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always"},
     ],
 
     # Which repos & branches this ruleset applies to
