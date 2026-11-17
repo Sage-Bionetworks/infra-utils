@@ -20,7 +20,7 @@ in organizations-infra.
 ## Dependencies
 
 Python 3.9+ and the packages in `requirements.txt` (boto3 1.34 or newer is needed for the
-GuardDuty `Features` API):
+GuardDuty `Features` API). CI tests Python 3.10 and 3.14; 3.9 has been checked locally.
 
 ```
 pip install -r requirements.txt
