@@ -1,6 +1,7 @@
 # Scripts for managing AWS
 
 * [associate-jc-system.ps1](#associate-jc-systemps1)
+* [guardduty/guardduty_org.py](#guarddutyguardduty_orgpy)
 * [install-ms-vc.ps1](#install-ms-vcps1)
 * [nuke_bucket.py](#nuke_bucketpy)
 * [scan_ses_bounce_owners.py](#scan_ses_bounce_ownerspy)
@@ -24,6 +25,12 @@ Assumes the following are installed through choco:
 ```
 associate-jc-system.ps1 -JcServiceApiKey XXXXXXXXXX -JcSystemsGroupId XXXXXXXXX -SynapseUserId 1234567
 ```
+
+## guardduty/guardduty_org.py
+
+Manages GuardDuty delegated administrator, org membership, auto-enable and protection features
+across regions, for the GuardDuty setup in organizations-infra. See
+[guardduty/README.md](guardduty/README.md).
 
 ## install-ms-vc.ps1
 

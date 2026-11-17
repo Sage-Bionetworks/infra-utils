@@ -1,0 +1,3 @@
+# For guardduty_org.py (Python 3.9+). Install with: pip install -r requirements.txt
+boto3>=1.34
+PyYAML>=6.0

@@ -1,0 +1,28 @@
+name: test-guardduty
+
+on:
+  pull_request:
+    paths: ['aws/guardduty/**', '.github/workflows/test-guardduty.yaml']
+  push:
+    branches: [master]
+    paths: ['aws/guardduty/**', '.github/workflows/test-guardduty.yaml']
+
+permissions:
+  contents: read
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.12']
+    defaults:
+      run:
+        working-directory: aws/guardduty
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r requirements.txt
+      - run: python -m unittest -v test_guardduty_org
