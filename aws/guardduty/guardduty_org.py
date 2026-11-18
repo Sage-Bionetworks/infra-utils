@@ -22,8 +22,8 @@ Subcommands:
                      auto-enable there, and remove the delegated administrator. Run before
                      removing the region from guardDutyRegions.
 
-Every subcommand accepts --dry-run, which makes only read calls and prints the write calls
-it would make. Regions always come from guardDutyRegions in the _tasks.yaml given by
+Every subcommand accepts --dry-run, which still makes the read-only calls but only prints the
+operations that would change AWS state (see Context.mutate). Regions always come from guardDutyRegions in the _tasks.yaml given by
 --tasks-file (from an organizations-infra checkout), so that file stays the single source
 of truth.
 """
@@ -219,8 +219,13 @@ class Context:
         self.warnings += 1
         self.out(f"  WARNING: {message}")
 
-    def write(self, client, operation: str, region: str, **kwargs) -> dict | None:
-        """Make a write call, or print it in dry-run mode."""
+    def mutate(self, client, operation: str, region: str, **kwargs) -> dict | None:
+        """Run an AWS API operation that changes state (e.g. create_members).
+
+        In dry-run mode, print the operation instead of running it and return None.
+        Read-only calls don't go through this method; they always run, so dry runs
+        can show what would change.
+        """
         if self.dry_run:
             self.out(f"  DRY_RUN: {client.meta.service_model.service_name}.{operation}"
                      f"(region={region}, {_describe_args(kwargs)})")
@@ -278,7 +283,7 @@ def enable_admin(session, regions: Sequence[str], ctx: Context) -> None:
         if admin_status(gd, SECURITY_CENTRAL_ACCOUNT_ID) == "ENABLED":
             ctx.out("  Already enabled, skipping.")
             continue
-        ctx.write(gd, "enable_organization_admin_account", region, AdminAccountId=SECURITY_CENTRAL_ACCOUNT_ID)
+        ctx.mutate(gd, "enable_organization_admin_account", region, AdminAccountId=SECURITY_CENTRAL_ACCOUNT_ID)
         ctx.out("  Done")
 
 
@@ -331,11 +336,11 @@ def configure_members(session, regions: Sequence[str], ctx: Context) -> None:
             to_enroll = [m for m in members if m["AccountId"] not in enabled]
             ctx.out(f"  {len(members) - len(to_enroll)} already Enabled members, {len(to_enroll)} to enroll.")
             for batch in batches(to_enroll):
-                response = ctx.write(gd, "create_members", region, DetectorId=detector, AccountDetails=batch)
+                response = ctx.mutate(gd, "create_members", region, DetectorId=detector, AccountDetails=batch)
                 ctx.report_unprocessed(response, "CreateMembers")
 
         # NEW, not ALL: ALL would re-enable every suspended account. See README.md.
-        ctx.write(
+        ctx.mutate(
             gd,
             "update_organization_configuration",
             region,
@@ -354,7 +359,7 @@ def remove_region(security_session, management_session, region: str, ctx: Contex
         ctx.warn(f"No SecurityCentral detector found in {region}; skipping member cleanup.")
     else:
         ctx.out(f"Stopping auto-enable in {region} (detector: {detector})...")
-        ctx.write(gd, "update_organization_configuration", region,
+        ctx.mutate(gd, "update_organization_configuration", region,
                   DetectorId=detector, AutoEnableOrganizationMembers="NONE")
 
         member_ids = list_member_ids(gd, detector, only_associated=False, enabled_only=False)
@@ -366,7 +371,7 @@ def remove_region(security_session, management_session, region: str, ctx: Contex
                 ("delete_members", "DeleteMembers"),
             ):
                 ctx.out(f"  {action} for {len(batch)} accounts...")
-                response = ctx.write(gd, operation, region, DetectorId=detector, AccountIds=batch)
+                response = ctx.mutate(gd, operation, region, DetectorId=detector, AccountIds=batch)
                 ctx.report_unprocessed(response, action)
 
     mgmt = management_session.client("guardduty", region_name=region)
@@ -374,7 +379,7 @@ def remove_region(security_session, management_session, region: str, ctx: Contex
         ctx.out(f"SecurityCentralAccount is not the delegated administrator in {region}; nothing to remove.")
     else:
         ctx.out(f"Removing the delegated administrator in {region}...")
-        ctx.write(mgmt, "disable_organization_admin_account", region, AdminAccountId=SECURITY_CENTRAL_ACCOUNT_ID)
+        ctx.mutate(mgmt, "disable_organization_admin_account", region, AdminAccountId=SECURITY_CENTRAL_ACCOUNT_ID)
 
     ctx.out(
         f"Next: remove {region} from guardDutyRegions in _tasks.yaml and merge, so CI deletes the "
@@ -409,7 +414,7 @@ def build_parser() -> argparse.ArgumentParser:
                         help="org-formation/070-guard-duty/_tasks.yaml in an organizations-infra "
                              "checkout; regions are read from its guardDutyRegions parameter")
     common.add_argument("--dry-run", action="store_true",
-                        help="make only read calls and print the write calls that would be made")
+                        help="make only read-only calls; print the operations that would change AWS state")
 
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)

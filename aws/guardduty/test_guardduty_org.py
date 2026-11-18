@@ -236,10 +236,10 @@ class ConfigureMembersTest(unittest.TestCase):
         self.assertIn("  1 already Enabled members, 51 to enroll.", lines)
         self.assertIn("  Not available in us-west-1, skipping: AI_PROTECTION", lines)
 
-    def test_dry_run_makes_no_writes(self):
+    def test_dry_run_makes_no_mutations(self):
         lines = []
         ctx = g.Context(dry_run=True, out=lines.append)
-        g.configure_members(self.session, ["us-east-1", "us-west-1"], ctx)  # Stubber fails on any write
+        g.configure_members(self.session, ["us-east-1", "us-west-1"], ctx)  # Stubber fails on any mutating call
         self.session.assert_done()
         dry = [line for line in lines if "DRY_RUN" in line]
         self.assertEqual(len(dry), 4)  # 2 x update_organization_configuration, 2 x create_members

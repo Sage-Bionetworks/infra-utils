@@ -61,8 +61,8 @@ Each subcommand checks that its credentials are for the expected account before 
 
 ## Usage
 
-Every subcommand accepts `--dry-run`, which makes only read calls and prints the write calls it
-would make. Do a dry run first.
+Every subcommand accepts `--dry-run`, which still makes the read-only calls but only prints the
+operations that would change AWS state. Do a dry run first.
 
 ```
 export TASKS=~/Documents/organizations-infra/org-formation/070-guard-duty/_tasks.yaml
