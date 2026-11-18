@@ -120,5 +120,6 @@ pip install -r requirements.txt
 python3 -m unittest -v test_guardduty_org
 ```
 
-The tests use botocore's `Stubber`, so no AWS access is needed. `testdata/_tasks.yaml` is a copy
-of the organizations-infra file, used to test parsing of org-formation's YAML tags.
+The tests use botocore's `Stubber`, so no AWS access is needed. The region-loading tests use
+small inline snippets in the format of the organizations-infra `_tasks.yaml`; no copy of that
+file is kept here.

@@ -1,9 +1,6 @@
 """Unit tests for guardduty_org.py. No AWS access needed.
 
 Run from this directory:  python3 -m unittest -v test_guardduty_org
-
-testdata/_tasks.yaml is a copy of org-formation/070-guard-duty/_tasks.yaml from
-Sage-Bionetworks-IT/organizations-infra, so the loader is tested against the real format.
 """
 
 import tempfile
@@ -16,7 +13,6 @@ from botocore.stub import Stubber
 import guardduty_org as g
 
 SECURITY = g.SECURITY_CENTRAL_ACCOUNT_ID
-FIXTURE_TASKS_FILE = Path(__file__).resolve().parent / "testdata" / "_tasks.yaml"
 
 
 class FakeSession:
@@ -92,31 +88,54 @@ REGION_FEATURES = [
 
 class LoadRegionsTest(unittest.TestCase):
     def write(self, text):
-        d = tempfile.mkdtemp()
-        (Path(d) / "_parameters.yaml").write_text("resourcePrefix: x\n")
-        path = Path(d) / "_tasks.yaml"
+        path = Path(tempfile.mkdtemp()) / "_tasks.yaml"
         path.write_text(text)
         return path
 
-    def test_organizations_infra_tasks_file(self):
-        regions = g.load_regions(FIXTURE_TASKS_FILE)
-        self.assertEqual(regions[0], "us-east-1")
-        self.assertEqual(len(regions), len(set(regions)))
-        self.assertGreater(len(regions), 1)
-
-    def test_org_formation_tags(self):
+    def test_org_formation_task_file(self):
+        # Same shape as org-formation/070-guard-duty/_tasks.yaml in organizations-infra.
+        # The !Include target doesn't exist: the loader must not try to read it.
         path = self.write(
             "Parameters:\n"
             "  <<: !Include '../_parameters.yaml'\n"
+            "\n"
+            "  appName:\n"
+            "    Type: String\n"
+            "    Default: 'guardduty'\n"
+            "\n"
             "  accountId:\n"
+            "    Type: String\n"
             "    Default: !Ref SecurityCentralAccount\n"
+            "\n"
+            "  # Regions where detectors are deployed\n"
             "  guardDutyRegions:\n"
             "    Type: List<String>\n"
-            "    Default: [us-east-1, eu-west-1]\n"
-            "Stack:\n"
-            "  StackName: !Sub '${resourcePrefix}-x'\n"
+            "    Default:\n"
+            "      - us-east-1\n"
+            "      - us-west-2   # comment\n"
+            "      - eu-west-1\n"
+            "\n"
+            "GuardDuty:\n"
+            "  Type: update-stacks\n"
+            "  StackName: !Sub '${resourcePrefix}-${appName}'\n"
+            "  DefaultOrganizationBinding:\n"
+            "    Account: !Ref accountId\n"
+            "    Region: !Ref guardDutyRegions\n"
+            "\n"
+            "GuardDutyConnect:\n"
+            "  Type: update-stacks\n"
+            "  Parameters:\n"
+            "    MasterDectector: !CopyValue [ !Sub '${resourcePrefix}-${appName}-detector-id' ]\n"
         )
+        self.assertEqual(g.load_regions(path), ["us-east-1", "us-west-2", "eu-west-1"])
+
+    def test_inline_region_list(self):
+        path = self.write("Parameters:\n  guardDutyRegions:\n    Default: [us-east-1, eu-west-1]\n")
         self.assertEqual(g.load_regions(path), ["us-east-1", "eu-west-1"])
+
+    def test_missing_file(self):
+        with self.assertRaisesRegex(g.GuardDutyOrgError, "Could not read"):
+            g.load_regions(Path(tempfile.mkdtemp()) / "missing.yaml")
 
     def test_missing_key(self):
         path = self.write("Parameters:\n  other: !Ref x\n")
