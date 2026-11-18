@@ -1,0 +1,32 @@
+name: test-guardduty
+
+on:
+  pull_request:
+    paths: ['aws/guardduty/**', '.github/workflows/test-guardduty.yaml']
+  push:
+    branches: [master]
+    paths: ['aws/guardduty/**', '.github/workflows/test-guardduty.yaml']
+
+permissions:
+  contents: read
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    strategy:
+      # Don't cancel the other versions if one fails
+      fail-fast: false
+      matrix:
+        # Oldest and newest versions setup-python provides on ubuntu-latest (26.04);
+        # 3.9 isn't available there. The tool also runs on 3.9 (checked locally).
+        python-version: ['3.10', '3.14']
+    defaults:
+      run:
+        working-directory: aws/guardduty
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r requirements.txt
+      - run: python -m unittest -v test_guardduty_org
